@@ -25,14 +25,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'servidor funcionando ✅' });
 });
 
-// Servir arquivos estáticos do frontend em produção
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-  });
-}
+// Frontend será hospedado separadamente no Vercel
+// Backend funciona apenas como API
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
