@@ -4,11 +4,12 @@
   "description": "Aplicação de controle financeiro pessoal",
   "main": "backend/index.js",
   "scripts": {
-    "start": "node backend/index.js",
+    "start": "NODE_ENV=production node backend/index.js",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon backend/index.js",
     "client": "cd frontend && npm start",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend && npm run build",
+    "heroku-postbuild": "npm run build"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
