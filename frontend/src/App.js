@@ -39,6 +39,13 @@ function App() {
     frequenciaRepetir: 'mensal'
   });
 
+  // Modal de Relatórios
+  const [mostrarModalRelatorio, setMostrarModalRelatorio] = useState(false);
+  const [formularioRelatorio, setFormularioRelatorio] = useState({
+    periodo: 'mes',
+    formato: 'excel'
+  });
+
   // ===== VERIFICAR SE ESTÁ LOGADO =====
   useEffect(() => {
     const verificarAutenticacao = async () => {
@@ -244,9 +251,50 @@ function App() {
     }
   };
 
+  const handleGerarRelatorio = async () => {
+    try {
+      setCarregando(true);
+      const { periodo, formato } = formularioRelatorio;
+      
+      const response = await api.get('/relatorio', {
+        params: { periodo, formato },
+        responseType: 'blob' // Para downloads de arquivo
+      });
+
+      // Criar link para download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      
+      const extensao = formato === 'excel' ? 'xlsx' : 'pdf';
+      const periodoNome = periodo === 'mes' ? 'mensal' : 'anual';
+      link.setAttribute('download', `relatorio-financeiro-${periodoNome}.${extensao}`);
+      
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      setMostrarModalRelatorio(false);
+      setSucessoMensagem('✅ Relatório gerado com sucesso!');
+      setTimeout(() => setSucessoMensagem(null), 3000);
+    } catch (err) {
+      setErro('❌ Erro ao gerar relatório: ' + err.message);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
   const fecharModal = () => {
     setMostrarModal(false);
     limparFormulario();
+  };
+
+  const fecharModalRelatorio = () => {
+    setMostrarModalRelatorio(false);
+    setFormularioRelatorio({
+      periodo: 'mes',
+      formato: 'excel'
+    });
   };
 
   // ===== RENDERIZAÇÃO =====
@@ -268,6 +316,9 @@ function App() {
               <div style={{ fontSize: '12px', color: '#718096' }}>Logado como</div>
               <div style={{ fontWeight: 'bold', color: '#2d3748' }}>{usuario.nome}</div>
             </div>
+            <button className="btn btn-secundario" onClick={() => setMostrarModalRelatorio(true)} disabled={carregando}>
+              📊 Relatórios
+            </button>
             <button className="btn btn-primaria" onClick={() => setMostrarModal(true)} disabled={carregando}>
               + Nova Conta
             </button>
@@ -669,5 +720,61 @@ function CartaoConta({ conta, status, onEditar, onDeletar, onMarcarPaga }) {
     </div>
   );
 }
+
+// ===== MODAL DE RELATÓRIOS =====
+{mostrarModalRelatorio && (
+  <div className="modal-overlay" onClick={fecharModalRelatorio}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2>📊 Gerar Relatório</h2>
+        <button className="btn-fechar" onClick={fecharModalRelatorio}>×</button>
+      </div>
+
+      <div className="modal-body">
+        <form onSubmit={(e) => { e.preventDefault(); handleGerarRelatorio(); }}>
+          {/* PERÍODO */}
+          <div className="form-group">
+            <label htmlFor="periodo">Período *</label>
+            <select
+              id="periodo"
+              name="periodo"
+              value={formularioRelatorio.periodo}
+              onChange={(e) => setFormularioRelatorio({...formularioRelatorio, periodo: e.target.value})}
+              required
+            >
+              <option value="mes">📅 Mês Atual</option>
+              <option value="ano">📆 Ano Atual</option>
+            </select>
+          </div>
+
+          {/* FORMATO */}
+          <div className="form-group">
+            <label htmlFor="formato">Formato do Arquivo *</label>
+            <select
+              id="formato"
+              name="formato"
+              value={formularioRelatorio.formato}
+              onChange={(e) => setFormularioRelatorio({...formularioRelatorio, formato: e.target.value})}
+              required
+            >
+              <option value="excel">📊 Excel (.xlsx)</option>
+              <option value="pdf">📄 PDF (.pdf)</option>
+            </select>
+          </div>
+
+          {/* BOTÕES */}
+          <div className="modal-actions">
+            <button type="button" className="btn btn-secundario" onClick={fecharModalRelatorio}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn btn-primaria" disabled={carregando}>
+              {carregando ? '⏳ Gerando...' : '📥 Baixar Relatório'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
 
 export default App;

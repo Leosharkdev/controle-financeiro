@@ -57,4 +57,9 @@ router.get('/proximos-vencimentos', autenticar, contasController.proximosVencime
 // Histórico de pagamentos
 router.get('/historico', autenticar, contasController.obterHistorico);
 
+// ===== ROTAS DE RELATÓRIOS (autenticadas) =====
+
+// Gerar relatório Excel/PDF
+router.get('/relatorio', autenticar, contasController.gerarRelatorio);
+
 module.exports = router;
