@@ -52,21 +52,18 @@ exports.registro = async (req, res) => {
     // Hash da senha
     const senhaHash = await bcrypt.hash(senha, 10);
 
-    const codigoVerificacao = crypto.randomBytes(24).toString('hex');
-    const expiracaoVerificacao = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-
-    // Criar usuário não verificado
+    // TEMPORÁRIO: Criar usuário já verificado (sem email)
     const resultado = await db.run(
-      `INSERT INTO usuarios (email, senha, nome, verificado, codigoVerificacao, expiracaoVerificacao)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [email.toLowerCase(), senhaHash, nome, 0, codigoVerificacao, expiracaoVerificacao]
+      `INSERT INTO usuarios (email, senha, nome, verificado)
+       VALUES (?, ?, ?, ?)`,
+      [email.toLowerCase(), senhaHash, nome, 1] // verificado = 1
     );
 
-    await emailService.enviarEmailConfirmacao(email.toLowerCase(), codigoVerificacao, nome);
+    // COMENTADO TEMPORARIAMENTE: await emailService.enviarEmailConfirmacao(email.toLowerCase(), codigoVerificacao, nome);
 
     res.status(201).json({
       sucesso: true,
-      mensagem: 'Conta criada. Verifique seu email para ativar sua conta.'
+      mensagem: 'Conta criada com sucesso! Faça login para começar.'
     });
   } catch (erro) {
     console.error('Erro ao registrar:', erro);
